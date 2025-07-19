@@ -12,5 +12,31 @@
     "ano": 2010,
     "nota": "7.4",
     "dataAdicao": "2025-07-19T00:29:29.603Z"
+  },
+  {
+    "id": 1752886038718,
+    "nome": "Bee Movie",
+    "slug": "bee-movie",
+    "linkDrive": "https://yokoso.b-cdn.net/DESENHOS/BEE%20MOVIE/04A79265A6104037B8CF149C9B40E296_media.mp4",
+    "driveId": "https://yokoso.b-cdn.net/DESENHOS/BEE%20MOVIE/04A79265A6104037B8CF149C9B40E296_media.mp4",
+    "tmdbId": "5559",
+    "poster": "https://image.tmdb.org/t/p/w500/nr057R7XSUfee19fhxmumsh0Yps.jpg",
+    "capaHorizontal": "https://image.tmdb.org/t/p/w1280/dM69VHjYFs8JBFNwI1rG0c7xeQz.jpg",
+    "sinopse": "O ambicioso jovem Barry B. Benson cai no mundo com os respeitados Ases do Pólen em busca de néctar e aventura. Mas quando quebra uma das regras fundamentais do mundo das abelhas e fala com humanos, Barry provoca uma incrível série de fatos, que provam que até uma pequena abelha pode fazer a grande diferença!",
+    "ano": 2007,
+    "nota": "6.0",
+    "dataAdicao": "2025-07-19T00:47:18.718Z",
+    "duracao": 90,
+    "dataLancamento": "27/10/2007",
+    "atores": "Jerry Seinfeld, Renée Zellweger, Matthew Broderick, Patrick Warburton, John Goodman",
+    "diretor": "Simon J. Smith",
+    "pais": "United States of America",
+    "classificacao": "Livre",
+    "idioma": "English",
+    "orcamento": "$ 150.000.000",
+    "receita": "$ 287.594.577",
+    "slogan": "Nascido para ser selvagem.",
+    "visualizacoes": 7532,
+    "trailerUrl": null
   }
 ]
