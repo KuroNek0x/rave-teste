@@ -80,12 +80,13 @@
                         <input type="number" id="tmdb-id" class="w-full bg-black text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-netflix focus:outline-none" required>
                     </div>
                     
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Link do Player (iframe completo)</label>
-                        <textarea id="link-video" rows="3" class="w-full bg-black text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-netflix focus:outline-none" placeholder='<iframe src="..." width="100%" height="315"></iframe>' required></textarea>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Link do Google Drive</label>
+                        <input type="url" id="link-drive" class="w-full bg-black text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-netflix focus:outline-none" placeholder="https://drive.google.com/file/d/ID_DO_ARQUIVO/view" required>
+                        <p class="text-gray-400 text-sm mt-1">Cole o link completo do Google Drive ou apenas o ID do arquivo</p>
                     </div>
                     
-                    <div class="md:col-span-2">
+                    <div class="md:col-span-2 flex justify-center">
                         <button type="submit" class="bg-netflix text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors font-semibold">
                             Adicionar Filme
                         </button>
@@ -179,7 +180,7 @@
             const dadosFilme = {
                 nome: document.getElementById('nome').value,
                 slug: document.getElementById('slug').value,
-                linkVideo: document.getElementById('link-video').value,
+                linkDrive: document.getElementById('link-drive').value,
                 tmdbId: document.getElementById('tmdb-id').value
             };
             
@@ -254,6 +255,7 @@
                                     <h3 class="font-bold text-lg">${filme.nome}</h3>
                                     <p class="text-gray-400">${filme.ano} • TMDb ID: ${filme.tmdbId}</p>
                                     <p class="text-sm text-gray-500">Slug: ${filme.slug}</p>
+                                    <p class="text-sm text-blue-400">Drive ID: ${filme.driveId || 'N/A'}</p>
                                 </div>
                             </div>
                             <div class="flex space-x-2">

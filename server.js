@@ -37,6 +37,26 @@ async function buscarFilmeTMDb(movieId) {
   }
 }
 
+// Função para extrair ID do Google Drive
+function extrairIdDrive(linkDrive) {
+  // Aceita vários formatos de link do Google Drive
+  const patterns = [
+    /\/file\/d\/([a-zA-Z0-9-_]+)/,
+    /id=([a-zA-Z0-9-_]+)/,
+    /\/d\/([a-zA-Z0-9-_]+)/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = linkDrive.match(pattern);
+    if (match) {
+      return match[1];
+    }
+  }
+  
+  // Se não encontrar padrão, assume que já é o ID
+  return linkDrive;
+}
+
 // Função para ler arquivo JSON
 async function lerFilmes() {
   try {
@@ -128,8 +148,31 @@ async function gerarPaginaFilme(filme) {
                     <!-- Player -->
                     <div class="bg-dark-gray rounded-lg p-6">
                         <h2 class="text-2xl font-bold mb-4">Assistir Filme</h2>
-                        <div class="aspect-video rounded-lg overflow-hidden">
-                            ${filme.linkVideo}
+                        
+                        <!-- Capa Horizontal -->
+                        <div class="relative mb-4">
+                            <img src="${filme.capaHorizontal}" 
+                                 alt="Capa de ${filme.nome}" 
+                                 class="w-full h-48 md:h-64 lg:h-80 object-cover rounded-lg">
+                            <div class="absolute inset-0 bg-black bg-opacity-40 rounded-lg flex items-center justify-center">
+                                <button onclick="iniciarVideo()" class="bg-netflix text-white px-8 py-4 rounded-full hover:bg-red-700 transition-colors flex items-center space-x-2 text-lg font-semibold">
+                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
+                                    </svg>
+                                    <span>Assistir Filme</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Player (inicialmente oculto) -->
+                        <div id="video-player" class="aspect-video rounded-lg overflow-hidden hidden">
+                            <iframe src="https://drive.google.com/file/d/${filme.driveId}/preview" 
+                                    width="100%" 
+                                    height="100%" 
+                                    allow="autoplay" 
+                                    allowfullscreen
+                                    class="w-full h-full">
+                            </iframe>
                         </div>
                     </div>
                 </div>
@@ -143,6 +186,16 @@ async function gerarPaginaFilme(filme) {
             <p class="text-gray-400">© 2025 MovieCatalog. Dados fornecidos por TMDb.</p>
         </div>
     </footer>
+
+    <script>
+        function iniciarVideo() {
+            const capa = document.querySelector('.relative.mb-4');
+            const player = document.getElementById('video-player');
+            
+            capa.style.display = 'none';
+            player.classList.remove('hidden');
+        }
+    </script>
 </body>
 </html>`;
 
@@ -173,18 +226,23 @@ app.get('/api/filmes', async (req, res) => {
 // Rota para adicionar filme
 app.post('/api/filmes', async (req, res) => {
   try {
-    const { nome, slug, linkVideo, tmdbId } = req.body;
+    const { nome, slug, linkDrive, tmdbId } = req.body;
     
     // Buscar dados do filme na API TMDb
     const dadosTMDb = await buscarFilmeTMDb(tmdbId);
+    
+    // Extrair ID do Google Drive
+    const driveId = extrairIdDrive(linkDrive);
     
     const novoFilme = {
       id: Date.now(),
       nome,
       slug,
-      linkVideo,
+      linkDrive,
+      driveId,
       tmdbId,
       poster: `https://image.tmdb.org/t/p/w500${dadosTMDb.poster_path}`,
+      capaHorizontal: `https://image.tmdb.org/t/p/w1280${dadosTMDb.backdrop_path}`,
       sinopse: dadosTMDb.overview || 'Sinopse não disponível.',
       ano: new Date(dadosTMDb.release_date).getFullYear(),
       nota: dadosTMDb.vote_average ? dadosTMDb.vote_average.toFixed(1) : 'N/A',
