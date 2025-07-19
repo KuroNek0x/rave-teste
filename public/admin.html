@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - MovieCatalog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        netflix: '#E50914',
+                        dark: '#141414',
+                        'dark-gray': '#2a2a2a'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark text-white min-h-screen">
+    <!-- Header -->
+    <header class="bg-black bg-opacity-90 backdrop-blur-sm">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <h1 class="text-netflix text-2xl font-bold">MovieCatalog Admin</h1>
+                <a href="/" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                    ← Voltar ao Site
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Login Section -->
+    <div id="login-section" class="min-h-screen flex items-center justify-center px-4">
+        <div class="bg-dark-gray rounded-lg p-8 w-full max-w-md">
+            <h2 class="text-3xl font-bold text-center mb-6">Login Administrativo</h2>
+            
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Usuário</label>
+                    <input type="text" id="usuario" class="w-full bg-black text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-netflix focus:outline-none" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Senha</label>
+                    <input type="password" id="senha" class="w-full bg-black text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-netflix focus:outline-none" required>
+                </div>
+                
+                <button type="submit" class="w-full bg-netflix text-white py-3 rounded-lg hover:bg-red-700 transition-colors font-semibold">
+                    Entrar
+                </button>
+            </form>
+            
+            <div id="login-error" class="mt-4 text-red-500 text-center hidden"></div>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="admin-panel" class="hidden py-8">
+        <div class="container mx-auto px-4">
+            <!-- Adicionar Filme -->
+            <div class="bg-dark-gray rounded-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold mb-6">Adicionar Novo Filme</h2>
+                
+                <form id="filme-form" class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Nome do Filme</label>
+                        <input type="text" id="nome" class="w-full bg-black text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-netflix focus:outline-none" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Slug (URL)</label>
+                        <input type="text" id="slug" class="w-full bg-black text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-netflix focus:outline-none" placeholder="ex: nome-do-filme" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">ID do TMDb</label>
+                        <input type="number" id="tmdb-id" class="w-full bg-black text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-netflix focus:outline-none" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Link do Player (iframe completo)</label>
+                        <textarea id="link-video" rows="3" class="w-full bg-black text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-netflix focus:outline-none" placeholder='<iframe src="..." width="100%" height="315"></iframe>' required></textarea>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <button type="submit" class="bg-netflix text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors font-semibold">
+                            Adicionar Filme
+                        </button>
+                    </div>
+                </form>
+                
+                <div id="filme-message" class="mt-4 text-center hidden"></div>
+            </div>
+
+            <!-- Lista de Filmes -->
+            <div class="bg-dark-gray rounded-lg p-6">
+                <h2 class="text-2xl font-bold mb-6">Filmes Cadastrados</h2>
+                
+                <div id="loading-filmes" class="text-center py-8">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-netflix"></div>
+                    <p class="mt-2 text-gray-400">Carregando...</p>
+                </div>
+                
+                <div id="lista-filmes" class="hidden space-y-4">
+                    <!-- Filmes serão carregados aqui -->
+                </div>
+                
+                <div id="sem-filmes-admin" class="text-center py-8 text-gray-400 hidden">
+                    Nenhum filme cadastrado ainda.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isLoggedIn = false;
+
+        // Função de login
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const usuario = document.getElementById('usuario').value;
+            const senha = document.getElementById('senha').value;
+            const errorDiv = document.getElementById('login-error');
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ usuario, senha })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    isLoggedIn = true;
+                    document.getElementById('login-section').classList.add('hidden');
+                    document.getElementById('admin-panel').classList.remove('hidden');
+                    carregarFilmesAdmin();
+                } else {
+                    errorDiv.textContent = result.message;
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Erro ao fazer login. Tente novamente.';
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
+        // Função para gerar slug automaticamente
+        document.getElementById('nome').addEventListener('input', (e) => {
+            const nome = e.target.value;
+            const slug = nome.toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .trim();
+            document.getElementById('slug').value = slug;
+        });
+
+        // Função para adicionar filme
+        document.getElementById('filme-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!isLoggedIn) return;
+            
+            const messageDiv = document.getElementById('filme-message');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            // Desabilitar botão
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Adicionando...';
+            
+            const dadosFilme = {
+                nome: document.getElementById('nome').value,
+                slug: document.getElementById('slug').value,
+                linkVideo: document.getElementById('link-video').value,
+                tmdbId: document.getElementById('tmdb-id').value
+            };
+            
+            try {
+                const response = await fetch('/api/filmes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dadosFilme)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    messageDiv.textContent = 'Filme adicionado com sucesso!';
+                    messageDiv.className = 'mt-4 text-center text-green-500';
+                    messageDiv.classList.remove('hidden');
+                    
+                    // Limpar formulário
+                    document.getElementById('filme-form').reset();
+                    
+                    // Recarregar lista
+                    carregarFilmesAdmin();
+                } else {
+                    messageDiv.textContent = result.message || 'Erro ao adicionar filme';
+                    messageDiv.className = 'mt-4 text-center text-red-500';
+                    messageDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                messageDiv.textContent = 'Erro ao adicionar filme. Tente novamente.';
+                messageDiv.className = 'mt-4 text-center text-red-500';
+                messageDiv.classList.remove('hidden');
+            }
+            
+            // Reabilitar botão
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Adicionar Filme';
+            
+            // Limpar mensagem após 3 segundos
+            setTimeout(() => {
+                messageDiv.classList.add('hidden');
+            }, 3000);
+        });
+
+        // Função para carregar filmes no admin
+        async function carregarFilmesAdmin() {
+            if (!isLoggedIn) return;
+            
+            try {
+                const response = await fetch('/api/filmes');
+                const filmes = await response.json();
+                
+                const loading = document.getElementById('loading-filmes');
+                const lista = document.getElementById('lista-filmes');
+                const semFilmes = document.getElementById('sem-filmes-admin');
+                
+                loading.classList.add('hidden');
+                
+                if (filmes.length === 0) {
+                    semFilmes.classList.remove('hidden');
+                    lista.classList.add('hidden');
+                } else {
+                    semFilmes.classList.add('hidden');
+                    lista.classList.remove('hidden');
+                    
+                    lista.innerHTML = filmes.map(filme => `
+                        <div class="bg-black rounded-lg p-4 flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <img src="${filme.poster}" alt="${filme.nome}" class="w-16 h-24 object-cover rounded">
+                                <div>
+                                    <h3 class="font-bold text-lg">${filme.nome}</h3>
+                                    <p class="text-gray-400">${filme.ano} • TMDb ID: ${filme.tmdbId}</p>
+                                    <p class="text-sm text-gray-500">Slug: ${filme.slug}</p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <a href="/${filme.slug}.html" target="_blank" class="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors text-sm">
+                                    Ver Página
+                                </a>
+                                <button onclick="removerFilme(${filme.id})" class="bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 transition-colors text-sm">
+                                    Remover
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar filmes:', error);
+            }
+        }
+
+        // Função para remover filme
+        async function removerFilme(id) {
+            if (!isLoggedIn || !confirm('Tem certeza que deseja remover este filme?')) return;
+            
+            try {
+                const response = await fetch(`/api/filmes/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    carregarFilmesAdmin();
+                } else {
+                    alert('Erro ao remover filme: ' + result.message);
+                }
+            } catch (error) {
+                alert('Erro ao remover filme. Tente novamente.');
+            }
+        }
+    </script>
+</body>
+</html>

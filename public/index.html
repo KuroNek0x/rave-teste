@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieCatalog - Catálogo de Filmes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        netflix: '#E50914',
+                        dark: '#141414',
+                        'dark-gray': '#2a2a2a'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark text-white">
+    <!-- Header -->
+    <header class="bg-black bg-opacity-90 fixed w-full top-0 z-50 backdrop-blur-sm">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <h1 class="text-netflix text-3xl font-bold">MovieCatalog</h1>
+                <a href="/admin.html" class="bg-netflix text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                    Admin
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="pt-20 pb-12 bg-gradient-to-b from-black to-dark">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-netflix to-red-400 bg-clip-text text-transparent">
+                Seu Catálogo de Filmes
+            </h2>
+            <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                Descubra, explore e assista aos melhores filmes em um só lugar. 
+                Uma experiência cinematográfica completa.
+            </p>
+        </div>
+    </section>
+
+    <!-- Loading -->
+    <div id="loading" class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-netflix"></div>
+        <p class="mt-4 text-gray-400">Carregando filmes...</p>
+    </div>
+
+    <!-- Catálogo de Filmes -->
+    <section id="catalogo" class="py-12 hidden">
+        <div class="container mx-auto px-4">
+            <h3 class="text-3xl font-bold mb-8 text-center">Filmes Disponíveis</h3>
+            <div id="grade-filmes" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <!-- Filmes serão carregados aqui -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Mensagem quando não há filmes -->
+    <div id="sem-filmes" class="text-center py-12 hidden">
+        <div class="max-w-md mx-auto">
+            <div class="text-6xl mb-4">🎬</div>
+            <h3 class="text-2xl font-bold mb-4">Nenhum filme encontrado</h3>
+            <p class="text-gray-400 mb-6">O catálogo está vazio. Adicione alguns filmes através do painel administrativo.</p>
+            <a href="/admin.html" class="bg-netflix text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors inline-block">
+                Ir para Admin
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-black bg-opacity-50 py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-400">© 2025 MovieCatalog. Dados fornecidos por TMDb.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Função para carregar filmes
+        async function carregarFilmes() {
+            try {
+                const response = await fetch('/api/filmes');
+                const filmes = await response.json();
+                
+                const loading = document.getElementById('loading');
+                const catalogo = document.getElementById('catalogo');
+                const semFilmes = document.getElementById('sem-filmes');
+                const gradeFilmes = document.getElementById('grade-filmes');
+                
+                loading.classList.add('hidden');
+                
+                if (filmes.length === 0) {
+                    semFilmes.classList.remove('hidden');
+                } else {
+                    catalogo.classList.remove('hidden');
+                    
+                    gradeFilmes.innerHTML = filmes.map(filme => `
+                        <div class="group cursor-pointer transform hover:scale-105 transition-all duration-300">
+                            <a href="/${filme.slug}.html" class="block">
+                                <div class="relative overflow-hidden rounded-lg shadow-2xl">
+                                    <img src="${filme.poster}" 
+                                         alt="${filme.nome}" 
+                                         class="w-full h-[400px] object-cover group-hover:opacity-75 transition-opacity">
+                                    
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div class="absolute bottom-0 left-0 right-0 p-4">
+                                            <h4 class="font-bold text-lg mb-1 line-clamp-2">${filme.nome}</h4>
+                                            <p class="text-sm text-gray-300">${filme.ano}</p>
+                                            ${filme.nota !== 'N/A' ? `
+                                                <div class="flex items-center mt-2">
+                                                    <svg class="w-4 h-4 text-yellow-400 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                                    </svg>
+                                                    <span class="text-sm">${filme.nota}</span>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <h4 class="font-semibold text-lg line-clamp-2 group-hover:text-netflix transition-colors">
+                                        ${filme.nome}
+                                    </h4>
+                                    <p class="text-gray-400 text-sm mt-1">${filme.ano}</p>
+                                </div>
+                            </a>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar filmes:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div class="text-center py-12">
+                        <p class="text-red-500">Erro ao carregar filmes. Tente novamente.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Carregar filmes ao carregar a página
+        document.addEventListener('DOMContentLoaded', carregarFilmes);
+    </script>
+
+    <style>
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</body>
+</html>
